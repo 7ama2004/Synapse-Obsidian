@@ -1,0 +1,56 @@
+{
+  "id": "core/summarizer",
+  "name": "Text Summarizer",
+  "description": "Summarizes long text into concise bullet points or paragraphs",
+  "author": "Living Canvas Team",
+  "version": "1.0.0",
+  "category": "core",
+  "settings": [
+    {
+      "name": "systemPrompt",
+      "description": "System prompt for the AI",
+      "type": "textarea",
+      "required": true,
+      "default": "You are a helpful academic assistant. Summarize the following text."
+    },
+    {
+      "name": "tone",
+      "description": "Tone of the summary",
+      "type": "dropdown",
+      "required": true,
+      "default": "concise",
+      "options": {
+        "concise": "Concise",
+        "academic": "Academic",
+        "casual": "Casual",
+        "technical": "Technical"
+      }
+    },
+    {
+      "name": "outputFormat",
+      "description": "Format of the output",
+      "type": "dropdown",
+      "required": true,
+      "default": "bullet",
+      "options": {
+        "bullet": "Bullet Points",
+        "paragraph": "Paragraph",
+        "numbered": "Numbered List"
+      }
+    },
+    {
+      "name": "maxLength",
+      "description": "Maximum length of summary (words)",
+      "type": "number",
+      "required": false,
+      "default": 200
+    },
+    {
+      "name": "citeReferences",
+      "description": "Include references and citations",
+      "type": "boolean",
+      "required": false,
+      "default": false
+    }
+  ]
+}

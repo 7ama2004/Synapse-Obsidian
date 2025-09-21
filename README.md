@@ -1,94 +1,227 @@
-# Obsidian Sample Plugin
+# Living Canvas - AI-Powered Obsidian Canvas Plugin
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Transform your Obsidian canvas into an intelligent workspace with AI-powered blocks that can process, analyze, and generate content.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+### 🤖 AI-Powered Blocks
+- **Text Summarizer**: Summarize long texts into concise bullet points or paragraphs
+- **Quiz Generator**: Create quiz questions from educational content
+- **AI Grader**: Grade essays and assignments with detailed feedback
+- **Translator**: Translate text between different languages
+- **Clarification Tool**: Ask AI to clarify any selected text
 
-## First time developing plugins?
+### 🎨 Canvas Integration
+- Seamlessly integrates with Obsidian's native canvas
+- All data stored directly in canvas JSON files
+- Portable and shareable workflows
+- Visual connections between input and output
 
-Quick starting guide for new plugin devs:
+### ⚙️ Configurable Blocks
+- Each block type has customizable settings
+- Easy-to-use configuration panels
+- Support for different AI models (GPT, Claude)
+- Extensible block system for community contributions
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+## Installation
 
-## Releasing new releases
+1. Download the plugin files to your Obsidian plugins directory
+2. Enable the plugin in Obsidian's Community Plugins settings
+3. Configure your AI API keys in the plugin settings
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+## Setup
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+### API Keys Configuration
 
-## Adding your plugin to the community plugin list
+1. Open Obsidian Settings
+2. Go to Community Plugins → Living Canvas
+3. Add your API keys:
+   - **OpenAI API Key**: For GPT models (gpt-3.5-turbo, gpt-4)
+   - **Anthropic API Key**: For Claude models (claude-3-sonnet, claude-3-haiku)
+4. Select your default AI model
+5. Enable debug mode if needed for troubleshooting
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+### Getting API Keys
 
-## How to use
+- **OpenAI**: Visit [OpenAI API](https://platform.openai.com/api-keys) to get your key
+- **Anthropic**: Visit [Anthropic Console](https://console.anthropic.com/) to get your key
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+## Usage
 
-## Manually installing the plugin
+### Inserting Blocks
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+1. Open a canvas in Obsidian
+2. Use the command palette (`Ctrl/Cmd + P`)
+3. Search for "Living Canvas: Insert Block"
+4. Select the block type you want to insert
+5. The block will appear on your canvas
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
+### Configuring Blocks
 
-## Funding URL
+1. Click on a Living Canvas block
+2. Use the command palette to "Configure Selected Block"
+3. Adjust the settings in the configuration panel
+4. Save your changes
 
-You can include funding URLs where people who use your plugin can financially support it.
+### Running Blocks
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+1. Connect text nodes to your Living Canvas block (draw edges between them)
+2. Use the command palette to "Run Selected Block"
+3. The AI will process the connected text and create an output node
+
+### Text Clarification
+
+1. Select text in any editor
+2. Right-click and choose "Ask AI to Clarify"
+3. Enter your question in the modal
+4. The AI will provide an answer in a new canvas node
+
+## Block Types
+
+### 📝 Text Summarizer
+- **Purpose**: Summarize long texts into concise formats
+- **Settings**:
+  - System prompt customization
+  - Tone selection (concise, academic, casual, technical)
+  - Output format (bullet points, paragraph, numbered list)
+  - Maximum length control
+  - Reference citation options
+
+### 🧠 Quiz Generator
+- **Purpose**: Create quiz questions from educational content
+- **Settings**:
+  - Question type (multiple choice, true/false, short answer, mixed)
+  - Number of questions
+  - Difficulty level (easy, medium, hard)
+
+### 📊 AI Grader
+- **Purpose**: Grade essays and assignments with detailed feedback
+- **Settings**:
+  - Grading criteria specification
+  - Grade scale (0-100 points, letter grades, detailed rubric)
+  - Improvement suggestions toggle
+
+### 🌍 Translator
+- **Purpose**: Translate text between different languages
+- **Settings**:
+  - Target language selection
+  - Formatting preservation options
+
+## Architecture
+
+The plugin follows a modular architecture:
+
+- **BlockManager**: Discovers and manages block definitions
+- **CanvasManager**: Handles canvas file operations
+- **UIManager**: Manages user interface and commands
+- **ActionHandler**: Orchestrates block execution
+- **BlockExecutor**: Handles AI API calls
+
+## Creating Custom Blocks
+
+You can create custom blocks by adding them to the `blocks/` directory:
+
+1. Create a new directory: `blocks/community/my-block/`
+2. Add `block.json` with block metadata and settings
+3. Add `executor.js` with the execution logic
+4. Reload blocks using the plugin settings
+
+### Block Definition Example
 
 ```json
 {
-    "fundingUrl": "https://buymeacoffee.com"
-}
-```
-
-If you have multiple URLs, you can also do:
-
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
+  "id": "community/my-block",
+  "name": "My Custom Block",
+  "description": "Description of what this block does",
+  "author": "Your Name",
+  "version": "1.0.0",
+  "category": "community",
+  "settings": [
+    {
+      "name": "mySetting",
+      "description": "Description of the setting",
+      "type": "text",
+      "required": true,
+      "default": "default value"
     }
+  ]
 }
 ```
 
-## API Documentation
+### Executor Example
 
+```javascript
+async function execute(inputText, config) {
+  const { mySetting } = config;
+  
+  // Construct your prompt
+  const prompt = `Process this text with setting: ${mySetting}\n\nText: ${inputText}`;
+  
+  // Return the prompt - the BlockExecutor will handle the AI API call
+  return prompt;
+}
+
+module.exports = { execute };
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"No canvas file is currently open"**
+   - Make sure you have a canvas file open in Obsidian
+   - The plugin only works with canvas files (.canvas)
+
+2. **"API key not configured"**
+   - Add your API keys in the plugin settings
+   - Make sure the keys are valid and have sufficient credits
+
+3. **"Block execution failed"**
+   - Check your internet connection
+   - Verify your API keys are correct
+   - Enable debug mode to see detailed error messages
+
+4. **"No input text found"**
+   - Connect text nodes to your Living Canvas block
+   - Make sure the text nodes contain actual text content
+
+### Debug Mode
+
+Enable debug mode in the plugin settings to see detailed logging in the browser console. This helps troubleshoot issues with block execution and API calls.
+
+## Contributing
+
+We welcome contributions! Here's how you can help:
+
+1. **Report Issues**: Use GitHub Issues to report bugs or request features
+2. **Create Blocks**: Develop new block types for the community
+3. **Improve Documentation**: Help improve this README and other docs
+4. **Code Contributions**: Submit pull requests for bug fixes and features
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+- **GitHub Issues**: Report bugs and request features
+- **Discussions**: Join community discussions about the plugin
+- **Documentation**: Check the wiki for detailed guides
+
+## Changelog
+
+### Version 1.0.0
+- Initial release
+- Core block types (Summarizer, Quiz Generator, AI Grader, Translator)
+- Canvas integration
+- AI API support (OpenAI, Anthropic)
+- Configuration system
+- Text clarification feature
+
+---
+
+<<<<<<< Current (Your changes)
 See https://github.com/obsidianmd/obsidian-api
+=======
+**Happy Canvas Building! 🎨✨**
+>>>>>>> Incoming (Background Agent changes)

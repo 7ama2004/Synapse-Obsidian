@@ -1,0 +1,50 @@
+{
+  "id": "core/study-buddy",
+  "name": "Study Buddy",
+  "description": "Creates study guides, flashcards, and learning plans from your notes",
+  "author": "Living Canvas Team",
+  "version": "1.0.0",
+  "category": "core",
+  "settings": [
+    {
+      "name": "studyFormat",
+      "description": "Type of study material to create",
+      "type": "dropdown",
+      "required": true,
+      "default": "flashcards",
+      "options": {
+        "flashcards": "Flashcards",
+        "study-guide": "Study Guide",
+        "learning-plan": "Learning Plan",
+        "mnemonics": "Memory Aids & Mnemonics"
+      }
+    },
+    {
+      "name": "learningStyle",
+      "description": "Preferred learning style",
+      "type": "dropdown",
+      "required": true,
+      "default": "visual",
+      "options": {
+        "visual": "Visual Learner",
+        "auditory": "Auditory Learner",
+        "kinesthetic": "Hands-on Learner",
+        "reading": "Reading/Writing Learner"
+      }
+    },
+    {
+      "name": "timeAvailable",
+      "description": "Study time available (minutes)",
+      "type": "number",
+      "required": false,
+      "default": 30
+    },
+    {
+      "name": "includeExamples",
+      "description": "Include practical examples",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    }
+  ]
+}

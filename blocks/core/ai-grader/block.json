@@ -1,0 +1,36 @@
+{
+  "id": "core/ai-grader",
+  "name": "AI Grader",
+  "description": "Grades essays, assignments, or answers with detailed feedback",
+  "author": "Living Canvas Team",
+  "version": "1.0.0",
+  "category": "core",
+  "settings": [
+    {
+      "name": "gradingCriteria",
+      "description": "Specific criteria to evaluate",
+      "type": "textarea",
+      "required": true,
+      "default": "Clarity, accuracy, completeness, and organization"
+    },
+    {
+      "name": "gradeScale",
+      "description": "Grading scale",
+      "type": "dropdown",
+      "required": true,
+      "default": "100",
+      "options": {
+        "100": "0-100 points",
+        "letter": "A-F letter grades",
+        "rubric": "Detailed rubric"
+      }
+    },
+    {
+      "name": "includeSuggestions",
+      "description": "Include improvement suggestions",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    }
+  ]
+}

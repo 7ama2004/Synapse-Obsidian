@@ -1,0 +1,42 @@
+{
+  "id": "core/quizzer",
+  "name": "Quiz Generator",
+  "description": "Generates quiz questions from educational content",
+  "author": "Living Canvas Team",
+  "version": "1.0.0",
+  "category": "core",
+  "settings": [
+    {
+      "name": "questionType",
+      "description": "Type of questions to generate",
+      "type": "dropdown",
+      "required": true,
+      "default": "multiple",
+      "options": {
+        "multiple": "Multiple Choice",
+        "truefalse": "True/False",
+        "short": "Short Answer",
+        "mixed": "Mixed Types"
+      }
+    },
+    {
+      "name": "numQuestions",
+      "description": "Number of questions to generate",
+      "type": "number",
+      "required": true,
+      "default": 5
+    },
+    {
+      "name": "difficulty",
+      "description": "Difficulty level",
+      "type": "dropdown",
+      "required": true,
+      "default": "medium",
+      "options": {
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
+      }
+    }
+  ]
+}

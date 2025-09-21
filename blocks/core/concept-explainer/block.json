@@ -1,0 +1,44 @@
+{
+  "id": "core/concept-explainer",
+  "name": "Concept Explainer",
+  "description": "Explains complex concepts in simple terms with analogies and examples",
+  "author": "Living Canvas Team",
+  "version": "1.0.0",
+  "category": "core",
+  "settings": [
+    {
+      "name": "audienceLevel",
+      "description": "Target audience understanding level",
+      "type": "dropdown",
+      "required": true,
+      "default": "beginner",
+      "options": {
+        "child": "Explain like I'm 5",
+        "beginner": "Beginner (High School)",
+        "intermediate": "Intermediate (College)",
+        "advanced": "Advanced (Graduate)"
+      }
+    },
+    {
+      "name": "useAnalogies",
+      "description": "Include analogies and metaphors",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "includeVisuals",
+      "description": "Suggest visual aids or diagrams",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "stepByStep",
+      "description": "Break down into step-by-step explanation",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    }
+  ]
+}

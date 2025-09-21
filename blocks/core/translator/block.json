@@ -1,0 +1,36 @@
+{
+  "id": "core/translator",
+  "name": "Translator",
+  "description": "Translates text between different languages",
+  "author": "Living Canvas Team",
+  "version": "1.0.0",
+  "category": "core",
+  "settings": [
+    {
+      "name": "targetLanguage",
+      "description": "Target language",
+      "type": "dropdown",
+      "required": true,
+      "default": "Spanish",
+      "options": {
+        "Spanish": "Spanish",
+        "French": "French",
+        "German": "German",
+        "Italian": "Italian",
+        "Portuguese": "Portuguese",
+        "Chinese": "Chinese",
+        "Japanese": "Japanese",
+        "Korean": "Korean",
+        "Arabic": "Arabic",
+        "Russian": "Russian"
+      }
+    },
+    {
+      "name": "preserveFormatting",
+      "description": "Preserve original formatting",
+      "type": "boolean",
+      "required": false,
+      "default": true
+    }
+  ]
+}
