@@ -1,0 +1,40 @@
+{
+  "id": "core/summarizer",
+  "name": "Text Summarizer",
+  "description": "Summarizes input text with customizable tone and format",
+  "author": "Living Canvas Team",
+  "version": "1.0.0",
+  "settings": [
+    {
+      "name": "systemPrompt",
+      "description": "System prompt for the AI",
+      "type": "textarea",
+      "required": true,
+      "default": "You are a helpful academic assistant. Summarize the following text."
+    },
+    {
+      "name": "tone",
+      "description": "Tone of the summary",
+      "type": "dropdown",
+      "required": false,
+      "default": "concise and academic",
+      "options": ["concise and academic", "casual and friendly", "formal and detailed", "creative and engaging"]
+    },
+    {
+      "name": "outputFormat",
+      "description": "Format of the output",
+      "type": "dropdown",
+      "required": false,
+      "default": "bullet points",
+      "options": ["bullet points", "paragraph", "numbered list", "outline"]
+    },
+    {
+      "name": "citeReferences",
+      "description": "Include references and citations",
+      "type": "boolean",
+      "required": false,
+      "default": false
+    }
+  ],
+  "executor": "executor.js"
+}

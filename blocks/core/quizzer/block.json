@@ -1,0 +1,33 @@
+{
+  "id": "core/quizzer",
+  "name": "Quiz Generator",
+  "description": "Generates quiz questions from input text",
+  "author": "Living Canvas Team",
+  "version": "1.0.0",
+  "settings": [
+    {
+      "name": "difficulty",
+      "description": "Difficulty level of the quiz",
+      "type": "dropdown",
+      "required": false,
+      "default": "medium",
+      "options": ["easy", "medium", "hard"]
+    },
+    {
+      "name": "questionCount",
+      "description": "Number of questions to generate",
+      "type": "number",
+      "required": false,
+      "default": 5
+    },
+    {
+      "name": "questionTypes",
+      "description": "Types of questions to include",
+      "type": "dropdown",
+      "required": false,
+      "default": "multiple choice",
+      "options": ["multiple choice", "true/false", "short answer", "mixed"]
+    }
+  ],
+  "executor": "executor.js"
+}

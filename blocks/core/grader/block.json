@@ -1,0 +1,33 @@
+{
+  "id": "core/grader",
+  "name": "AI Grader",
+  "description": "Provides feedback and grading on written content",
+  "author": "Living Canvas Team",
+  "version": "1.0.0",
+  "settings": [
+    {
+      "name": "criteria",
+      "description": "Grading criteria to evaluate",
+      "type": "textarea",
+      "required": false,
+      "default": "clarity, accuracy, completeness, organization"
+    },
+    {
+      "name": "scoringScale",
+      "description": "Scoring scale to use",
+      "type": "dropdown",
+      "required": false,
+      "default": "100 point scale",
+      "options": ["100 point scale", "letter grades", "rubric levels", "pass/fail"]
+    },
+    {
+      "name": "feedbackStyle",
+      "description": "Style of feedback to provide",
+      "type": "dropdown",
+      "required": false,
+      "default": "constructive",
+      "options": ["constructive", "detailed", "brief", "encouraging"]
+    }
+  ],
+  "executor": "executor.js"
+}
