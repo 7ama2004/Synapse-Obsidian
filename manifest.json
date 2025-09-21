@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "living-canvas",
+	"name": "Living Canvas",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Transform your Obsidian canvas into an AI-powered workspace with intelligent blocks that can process, analyze, and generate content.",
+	"author": "Living Canvas Team",
+	"authorUrl": "https://github.com/living-canvas",
+	"fundingUrl": "https://github.com/sponsors/living-canvas",
 	"isDesktopOnly": false
 }
