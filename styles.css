@@ -1,8 +1,150 @@
-/*
+/* Living Canvas Plugin Styles */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+.living-canvas-ribbon-class {
+	color: #4CAF50;
+}
 
-If your plugin does not need CSS, delete this file.
+.living-canvas-category {
+	margin-bottom: 1rem;
+}
 
-*/
+.living-canvas-category h3 {
+	margin: 0.5rem 0;
+	color: var(--text-accent);
+}
+
+.living-canvas-block-item {
+	padding: 0.75rem;
+	margin: 0.5rem 0;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.living-canvas-block-item:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.block-name {
+	font-weight: 600;
+	margin-bottom: 0.25rem;
+}
+
+.block-description {
+	font-size: 0.9rem;
+	color: var(--text-muted);
+}
+
+.setting-item {
+	margin-bottom: 1rem;
+}
+
+.setting-item-name {
+	font-weight: 600;
+	margin-bottom: 0.25rem;
+}
+
+.setting-item-name .required {
+	color: var(--text-error);
+}
+
+.setting-item-description {
+	font-size: 0.9rem;
+	color: var(--text-muted);
+	margin-bottom: 0.5rem;
+}
+
+.setting-item-control input,
+.setting-item-control textarea,
+.setting-item-control select {
+	width: 100%;
+	padding: 0.5rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.setting-item-control textarea {
+	min-height: 80px;
+	resize: vertical;
+}
+
+.modal-button-container {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	margin-top: 1rem;
+	padding-top: 1rem;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.selected-text-preview {
+	background-color: var(--background-secondary);
+	padding: 0.75rem;
+	border-radius: 4px;
+	margin-bottom: 1rem;
+	border-left: 3px solid var(--text-accent);
+}
+
+.clarify-question-input {
+	min-height: 100px;
+	width: 100%;
+	padding: 0.75rem;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	resize: vertical;
+}
+
+/* Canvas node status indicators */
+.canvas-node-container[data-living-canvas-status="processing"] {
+	border: 2px solid #FF9800;
+	animation: pulse 1.5s ease-in-out infinite;
+}
+
+.canvas-node-container[data-living-canvas-status="complete"] {
+	border: 2px solid #4CAF50;
+}
+
+.canvas-node-container[data-living-canvas-status="error"] {
+	border: 2px solid #F44336;
+}
+
+@keyframes pulse {
+	0% { opacity: 1; }
+	50% { opacity: 0.7; }
+	100% { opacity: 1; }
+}
+
+/* Configuration view styles */
+.living-canvas-config-view {
+	padding: 1rem;
+}
+
+.living-canvas-config-view h2 {
+	margin-top: 0;
+	color: var(--text-accent);
+}
+
+.living-canvas-config-view h3 {
+	margin: 1rem 0 0.5rem 0;
+	color: var(--text-normal);
+}
+
+.living-canvas-config-view ul {
+	margin: 0.5rem 0;
+	padding-left: 1.5rem;
+}
+
+.living-canvas-config-view li {
+	margin-bottom: 0.5rem;
+}
+
+.living-canvas-config-view .block-description {
+	font-size: 0.85rem;
+	color: var(--text-muted);
+	margin-top: 0.25rem;
+}
