@@ -1,0 +1,25 @@
+{
+  "id": "core/summarizer",
+  "name": "Summarizer",
+  "description": "Summarizes text content using AI.",
+  "author": "Synapse Community",
+  "version": "1.0.0",
+  "category": "core",
+  "settings": [
+    {
+      "name": "summaryLength",
+      "description": "Length of the summary",
+      "type": "dropdown",
+      "required": true,
+      "default": "medium",
+      "options": ["short", "medium", "long"]
+    },
+    {
+      "name": "focus",
+      "description": "What to focus on in the summary",
+      "type": "text",
+      "required": false,
+      "default": ""
+    }
+  ]
+}

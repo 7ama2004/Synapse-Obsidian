@@ -1,0 +1,31 @@
+{
+  "id": "core/custom-ai",
+  "name": "Custom AI",
+  "description": "A customizable AI block that can be prompted as desired.",
+  "author": "Synapse Community",
+  "version": "1.0.0",
+  "category": "core",
+  "settings": [
+    {
+      "name": "customPrompt",
+      "description": "Your custom prompt for the AI. Use {{input}} as a placeholder for the text from the canvas.",
+      "type": "textarea",
+      "required": true,
+      "default": "Summarize the following text for me: {{input}}"
+    },
+    {
+      "name": "promptName",
+      "description": "Name for this prompt (optional, for saving)",
+      "type": "text",
+      "required": false,
+      "default": ""
+    },
+    {
+      "name": "savePrompt",
+      "description": "Save this prompt to your directory",
+      "type": "toggle",
+      "required": false,
+      "default": false
+    }
+  ]
+}
