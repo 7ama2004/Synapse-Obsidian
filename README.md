@@ -1,94 +1,99 @@
-# Obsidian Sample Plugin
+# Synapse - AI-Powered Canvas Blocks for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+Synapse is an Obsidian plugin that brings AI-powered canvas blocks to enhance your productivity and learning experience. Create interactive AI blocks that can process text, generate summaries, translate content, and much more.
 
-This project uses TypeScript to provide type checking and documentation.
-The repo depends on the latest plugin API (obsidian.d.ts) in TypeScript Definition format, which contains TSDoc comments describing what it does.
+## Features
 
-This sample plugin demonstrates some of the basic functionality the plugin API can do.
-- Adds a ribbon icon, which shows a Notice when clicked.
-- Adds a command "Open Sample Modal" which opens a Modal.
-- Adds a plugin setting tab to the settings page.
-- Registers a global click event and output 'click' to the console.
-- Registers a global interval which logs 'setInterval' to the console.
+- **Custom AI Block**: Create your own AI prompts and save them to your directory
+- **Canvas Interface**: Drag and drop blocks on a visual canvas
+- **Block Configuration**: Easy configuration interface for all blocks
+- **Prompt Management**: Save and manage your custom prompts
+- **Multiple AI Models**: Support for GPT-3.5 and GPT-4
 
-## First time developing plugins?
+## Installation
 
-Quick starting guide for new plugin devs:
+1. Download the latest release from the releases page
+2. Extract the files to your Obsidian vault's `.obsidian/plugins/synapse/` directory
+3. Enable the plugin in Obsidian's Community Plugins settings
+4. Configure your OpenAI API key in the plugin settings
 
-- Check if [someone already developed a plugin for what you want](https://obsidian.md/plugins)! There might be an existing plugin similar enough that you can partner up with.
-- Make a copy of this repo as a template with the "Use this template" button (login to GitHub if you don't see it).
-- Clone your repo to a local development folder. For convenience, you can place this folder in your `.obsidian/plugins/your-plugin-name` folder.
-- Install NodeJS, then run `npm i` in the command line under your repo folder.
-- Run `npm run dev` to compile your plugin from `main.ts` to `main.js`.
-- Make changes to `main.ts` (or create new `.ts` files). Those changes should be automatically compiled into `main.js`.
-- Reload Obsidian to load the new version of your plugin.
-- Enable plugin in settings window.
-- For updates to the Obsidian API run `npm update` in the command line under your repo folder.
+## Quick Start
 
-## Releasing new releases
+1. **Set up your API key**:
+   - Go to Settings → Community Plugins → Synapse
+   - Enter your OpenAI API key
+   - Select your preferred AI model
 
-- Update your `manifest.json` with your new version number, such as `1.0.1`, and the minimum Obsidian version required for your latest release.
-- Update your `versions.json` file with `"new-plugin-version": "minimum-obsidian-version"` so older versions of Obsidian can download an older version of your plugin that's compatible.
-- Create new GitHub release using your new version number as the "Tag version". Use the exact version number, don't include a prefix `v`. See here for an example: https://github.com/obsidianmd/obsidian-sample-plugin/releases
-- Upload the files `manifest.json`, `main.js`, `styles.css` as binary attachments. Note: The manifest.json file must be in two places, first the root path of your repository and also in the release.
-- Publish the release.
+2. **Open the Canvas**:
+   - Use the command palette (Ctrl/Cmd + P)
+   - Search for "Open Synapse Canvas"
+   - Click "Add Block" to start building
 
-> You can simplify the version bump process by running `npm version patch`, `npm version minor` or `npm version major` after updating `minAppVersion` manually in `manifest.json`.
-> The command will bump version in `manifest.json` and `package.json`, and add the entry for the new version to `versions.json`
+3. **Configure a Block**:
+   - Add a Custom AI block to your canvas
+   - Click "Configure" on the block
+   - Enter your custom prompt (use `{{input}}` as placeholder for canvas text)
+   - Optionally save the prompt to your directory
 
-## Adding your plugin to the community plugin list
+## Available Blocks
 
-- Check the [plugin guidelines](https://docs.obsidian.md/Plugins/Releasing/Plugin+guidelines).
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+### Custom AI Block
+- **Purpose**: Create any AI-powered functionality you want
+- **Configuration**:
+  - `customPrompt`: Your custom prompt (use `{{input}}` for canvas text)
+  - `promptName`: Name for saving the prompt
+  - `savePrompt`: Toggle to save prompt to your directory
 
-## How to use
+### Summarizer Block
+- **Purpose**: Summarize text content
+- **Configuration**:
+  - `summaryLength`: Choose between short, medium, or long summaries
+  - `focus`: Optional focus area for the summary
 
-- Clone this repo.
-- Make sure your NodeJS is at least v16 (`node --version`).
-- `npm i` or `yarn` to install dependencies.
-- `npm run dev` to start compilation in watch mode.
+## Saving Prompts
 
-## Manually installing the plugin
+The Custom AI block allows you to save prompts to your Obsidian vault:
 
-- Copy over `main.js`, `styles.css`, `manifest.json` to your vault `VaultFolder/.obsidian/plugins/your-plugin-id/`.
+1. Configure a Custom AI block
+2. Enter your prompt in the `customPrompt` field
+3. Give it a name in the `promptName` field
+4. Enable `savePrompt` toggle
+5. Save the configuration
 
-## Improve code quality with eslint (optional)
-- [ESLint](https://eslint.org/) is a tool that analyzes your code to quickly find problems. You can run ESLint against your plugin to find common bugs and ways to improve your code. 
-- To use eslint with this project, make sure to install eslint from terminal:
-  - `npm install -g eslint`
-- To use eslint to analyze this project use this command:
-  - `eslint main.ts`
-  - eslint will then create a report with suggestions for code improvement by file and line number.
-- If your source code is in a folder, such as `src`, you can use eslint with this command to analyze all files in that folder:
-  - `eslint ./src/`
+Your prompt will be saved as a markdown file in the "Synapse Prompts" folder in your vault.
 
-## Funding URL
+## Configuration Saving
 
-You can include funding URLs where people who use your plugin can financially support it.
+All block configurations are automatically saved when you:
+- Click "Save Configuration" in the block configuration modal
+- The settings are persisted in the plugin's data
 
-The simple way is to set the `fundingUrl` field to your link in your `manifest.json` file:
+## Troubleshooting
 
-```json
-{
-    "fundingUrl": "https://buymeacoffee.com"
-}
+### Configuration Not Saving
+If you're unable to save block configurations:
+1. Make sure you have write permissions to your Obsidian vault
+2. Check that the plugin is properly enabled
+3. Try restarting Obsidian
+
+### API Errors
+- Verify your OpenAI API key is correct
+- Check your API key has sufficient credits
+- Ensure you have access to the selected model
+
+## Development
+
+To build the plugin from source:
+
+```bash
+npm install
+npm run build
 ```
 
-If you have multiple URLs, you can also do:
+## Contributing
 
-```json
-{
-    "fundingUrl": {
-        "Buy Me a Coffee": "https://buymeacoffee.com",
-        "GitHub Sponsor": "https://github.com/sponsors",
-        "Patreon": "https://www.patreon.com/"
-    }
-}
-```
+We welcome contributions! Please feel free to submit issues and pull requests.
 
-## API Documentation
+## License
 
-See https://github.com/obsidianmd/obsidian-api
+MIT License - see LICENSE file for details.
