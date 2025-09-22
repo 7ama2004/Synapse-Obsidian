@@ -26,8 +26,8 @@ export interface CanvasEdge {
 }
 
 export interface CanvasData {
-	nodes: { [key: string]: CanvasNode };
-	edges: { [key: string]: CanvasEdge };
+	nodes: CanvasNode[];
+	edges: CanvasEdge[];
 }
 
 export class CanvasManager {
@@ -63,11 +63,14 @@ export class CanvasManager {
 
 		try {
 			const content = await this.plugin.app.vault.read(file);
+			if (!content.trim()) {
+				return { nodes: [], edges: [] };
+			}
 			const data = JSON.parse(content);
 			
 			// Ensure the data has the expected structure
-			if (!data.nodes || !data.edges) {
-				this.plugin.debug('Invalid canvas data structure');
+			if (!Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+				this.plugin.debug('Invalid canvas data structure - nodes and edges must be arrays');
 				return null;
 			}
 
@@ -82,16 +85,25 @@ export class CanvasManager {
 	async writeCanvasData(data: CanvasData, canvasFile?: TFile): Promise<boolean> {
 		const file = canvasFile || this.currentCanvasFile;
 		if (!file) {
+			console.error(`[CanvasManager] No canvas file specified for writing`);
 			this.plugin.debug('No canvas file specified for writing');
 			return false;
 		}
 
+		console.log(`[CanvasManager] Writing canvas data to file: ${file.path}`);
+		console.log(`[CanvasManager] Data to write:`, data);
+
 		try {
-			await this.plugin.app.vault.modify(file, JSON.stringify(data, null, 2));
+			const jsonString = JSON.stringify(data, null, 2);
+			console.log(`[CanvasManager] JSON string length: ${jsonString.length}`);
+			console.log(`[CanvasManager] JSON preview: ${jsonString.substring(0, 200)}...`);
+			
+			await this.plugin.app.vault.modify(file, jsonString);
+			console.log(`[CanvasManager] Canvas data written successfully to ${file.path}`);
 			this.plugin.debug('Canvas data written successfully');
 			return true;
 		} catch (error) {
-			console.error('Error writing canvas data:', error);
+			console.error(`[CanvasManager] Error writing canvas data:`, error);
 			return false;
 		}
 	}
@@ -101,7 +113,7 @@ export class CanvasManager {
 		const data = await this.readCanvasData(canvasFile);
 		if (!data) return null;
 
-		return data.nodes[nodeId] || null;
+		return data.nodes.find(node => node.id === nodeId) || null;
 	}
 
 	// Get all nodes that have edges connecting TO the given node
@@ -112,7 +124,7 @@ export class CanvasManager {
 		const sourceNodeIds = new Set<string>();
 		
 		// Find all edges that point to this node
-		for (const edge of Object.values(data.edges)) {
+		for (const edge of data.edges) {
 			if (edge.toNode === nodeId) {
 				sourceNodeIds.add(edge.fromNode);
 			}
@@ -121,7 +133,7 @@ export class CanvasManager {
 		// Get the actual nodes
 		const sourceNodes: CanvasNode[] = [];
 		for (const sourceId of sourceNodeIds) {
-			const node = data.nodes[sourceId];
+			const node = data.nodes.find(n => n.id === sourceId);
 			if (node) {
 				sourceNodes.push(node);
 			}
@@ -135,36 +147,48 @@ export class CanvasManager {
 		const data = await this.readCanvasData(canvasFile);
 		if (!data) return false;
 
-		const node = data.nodes[nodeId];
-		if (!node) {
+		const nodeIndex = data.nodes.findIndex(node => node.id === nodeId);
+		if (nodeIndex === -1) {
 			this.plugin.debug(`Node ${nodeId} not found`);
 			return false;
 		}
 
 		// Update the node
-		Object.assign(node, updates);
-		data.nodes[nodeId] = node;
+		Object.assign(data.nodes[nodeIndex], updates);
 
 		return await this.writeCanvasData(data, canvasFile);
 	}
 
 	// Create a new node
 	async createNode(nodeData: Omit<CanvasNode, 'id'>, canvasFile?: TFile): Promise<string | null> {
+		const file = canvasFile || this.currentCanvasFile;
+		console.log(`[CanvasManager] createNode called with file: ${file?.path || 'null'}`);
+		
 		const data = await this.readCanvasData(canvasFile);
-		if (!data) return null;
+		if (!data) {
+			console.error(`[CanvasManager] Failed to read canvas data`);
+			return null;
+		}
+		console.log(`[CanvasManager] Canvas data read successfully:`, data);
 
 		// Generate a unique ID
 		const nodeId = this.generateNodeId();
+		console.log(`[CanvasManager] Generated nodeId: ${nodeId}`);
 		
 		// Create the node
 		const newNode: CanvasNode = {
 			id: nodeId,
 			...nodeData
 		};
+		console.log(`[CanvasManager] Created new node:`, newNode);
 
-		data.nodes[nodeId] = newNode;
+		data.nodes.push(newNode);
+		console.log(`[CanvasManager] Added node to data. Total nodes: ${data.nodes.length}`);
 
+		console.log(`[CanvasManager] Calling writeCanvasData...`);
 		const success = await this.writeCanvasData(data, canvasFile);
+		console.log(`[CanvasManager] writeCanvasData returned: ${success}`);
+		
 		return success ? nodeId : null;
 	}
 
@@ -174,7 +198,10 @@ export class CanvasManager {
 		if (!data) return null;
 
 		// Check if both nodes exist
-		if (!data.nodes[fromNodeId] || !data.nodes[toNodeId]) {
+		const fromNodeExists = data.nodes.some(node => node.id === fromNodeId);
+		const toNodeExists = data.nodes.some(node => node.id === toNodeId);
+		
+		if (!fromNodeExists || !toNodeExists) {
 			this.plugin.debug('One or both nodes do not exist');
 			return null;
 		}
@@ -189,7 +216,7 @@ export class CanvasManager {
 			toNode: toNodeId
 		};
 
-		data.edges[edgeId] = newEdge;
+		data.edges.push(newEdge);
 
 		const success = await this.writeCanvasData(data, canvasFile);
 		return success ? edgeId : null;
@@ -200,7 +227,7 @@ export class CanvasManager {
 		const data = await this.readCanvasData(canvasFile);
 		if (!data) return [];
 
-		return Object.values(data.nodes).filter(node => node.livingCanvas);
+		return data.nodes.filter(node => node.livingCanvas);
 	}
 
 	// Get nodes by block type
@@ -219,7 +246,7 @@ export class CanvasManager {
 	}
 
 	// Calculate position for new node near parent
-	calculateNewNodePosition(parentNode: CanvasNode, offset: number = 300): { x: number; y: number } {
+	calculateNewNodePosition(parentNode: CanvasNode, offset = 300): { x: number; y: number } {
 		return {
 			x: parentNode.x + parentNode.width + offset,
 			y: parentNode.y

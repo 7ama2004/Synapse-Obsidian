@@ -1,4 +1,4 @@
-import { Plugin } from 'obsidian';
+// no direct imports from obsidian needed here
 import { LivingCanvasPlugin } from '../main';
 
 export interface BlockSetting {
@@ -6,7 +6,7 @@ export interface BlockSetting {
 	description: string;
 	type: 'text' | 'textarea' | 'dropdown' | 'number' | 'boolean';
 	required?: boolean;
-	default?: any;
+	default?: unknown;
 	options?: { [key: string]: string }; // For dropdown type
 }
 
@@ -134,9 +134,9 @@ export class BlockManager {
 		}
 	}
 
-	private validateBlockConfig(config: any): boolean {
+private validateBlockConfig(config: Record<string, unknown>): boolean {
 		const requiredFields = ['id', 'name', 'description', 'author', 'version'];
-		return requiredFields.every(field => config[field] !== undefined);
+		return requiredFields.every(field => (config as Record<string, unknown>)[field] !== undefined);
 	}
 
 	private async createSampleBlocks(): Promise<void> {
@@ -148,6 +148,7 @@ export class BlockManager {
 		await this.createQuizzerBlock();
 		await this.createAIGraderBlock();
 		await this.createTranslatorBlock();
+		await this.createCustomPromptBlock();
 	}
 
 	private async createSummarizerBlock(): Promise<void> {
@@ -429,6 +430,131 @@ module.exports = { execute };
 `;
 
 		await this.plugin.app.vault.adapter.write(blockDir + '/executor.js', executorCode);
+	}
+
+	private async createCustomPromptBlock(): Promise<void> {
+		const blockDir = this.blocksDirectory + '/core/custom-prompt';
+		await this.plugin.app.vault.adapter.mkdir(blockDir);
+
+		const blockConfig = {
+			id: 'core/custom-prompt',
+			name: 'Custom Prompt',
+			description: 'Run any prompt you define against connected text',
+			author: 'Living Canvas Team',
+			version: '1.0.0',
+			category: 'core',
+			settings: [
+				{
+					name: 'prompt',
+					description: 'Prompt to run. Use {{input}} for the connected text.',
+					type: 'textarea',
+					required: true,
+					default: 'You are a helpful assistant. Using the following input, respond helpfully.\n\nInput:\n{{input}}'
+				},
+				{
+					name: 'temperature',
+					description: 'Creativity (0.0 - 1.0)',
+					type: 'number',
+					required: false,
+					default: 0.7
+				}
+			]
+		};
+
+		await this.plugin.app.vault.adapter.write(blockDir + '/block.json', JSON.stringify(blockConfig, null, 2));
+
+    const executorCode = `
+async function execute(inputText, config) {
+  const { prompt, temperature } = config;
+  const filled = (prompt || '').split('{{ input }}').join(inputText || '');
+  // Optionally include temperature hint inline; the model handler may ignore it
+  const header = typeof temperature === 'number' ? \`Temperature: \${temperature}\n\n\` : '';
+  return header + filled;
+}
+
+module.exports = { execute };
+`;
+
+		await this.plugin.app.vault.adapter.write(blockDir + '/executor.js', executorCode);
+	}
+
+	// Create a user-defined custom block under blocks/community/<slug>/
+	public async createUserBlock(params: { name: string; description: string; prompt: string; temperature?: number }): Promise<{ id: string; path: string } | null> {
+		try {
+			const slug = this.slugify(params.name) || `custom-${Date.now()}`;
+			const baseDir = `${this.blocksDirectory}/community`;
+			const blockDir = `${baseDir}/${slug}`;
+
+			// Ensure directories exist
+			if (!(await this.plugin.app.vault.adapter.exists(this.blocksDirectory))) {
+				await this.plugin.app.vault.adapter.mkdir(this.blocksDirectory);
+			}
+			if (!(await this.plugin.app.vault.adapter.exists(baseDir))) {
+				await this.plugin.app.vault.adapter.mkdir(baseDir);
+			}
+			if (await this.plugin.app.vault.adapter.exists(blockDir)) {
+				// Append timestamp to avoid collision
+				const ts = Date.now();
+				return await this.createUserBlock({ ...params, name: `${params.name}-${ts}` });
+			}
+			await this.plugin.app.vault.adapter.mkdir(blockDir);
+
+			const id = `community/${slug}`;
+				const blockJson: Record<string, unknown> = {
+				id,
+				name: params.name,
+				description: params.description,
+				author: (this.plugin.manifest && typeof (this.plugin.manifest as unknown as { author?: string }).author === 'string')
+					? (this.plugin.manifest as unknown as { author?: string }).author as string
+					: 'User',
+				version: '1.0.0',
+				category: 'community',
+				settings: [
+					{
+						name: 'prompt',
+						description: 'Prompt to run. Use {{ input }} for the connected text.',
+						type: 'textarea',
+						required: true,
+						default: params.prompt
+					},
+					{
+						name: 'temperature',
+						description: 'Creativity (0.0 - 1.0)',
+						type: 'number',
+						required: false,
+						default: typeof params.temperature === 'number' ? params.temperature : 0.7
+					}
+				]
+			};
+
+			const executorCode = `
+async function execute(inputText, config) {
+  const { prompt, temperature } = config;
+  const filled = (prompt || '').split('{{ input }}').join(inputText || '');
+  const header = typeof temperature === 'number' ? \`Temperature: \${temperature}\n\n\` : '';
+  return header + filled;
+}
+
+module.exports = { execute };
+`;
+
+			await this.plugin.app.vault.adapter.write(`${blockDir}/block.json`, JSON.stringify(blockJson, null, 2));
+			await this.plugin.app.vault.adapter.write(`${blockDir}/executor.js`, executorCode);
+
+			return { id, path: blockDir };
+		} catch (error) {
+			console.error('Error creating user block:', error);
+			return null;
+		}
+	}
+
+	private slugify(input: string): string {
+		return input
+			.toLowerCase()
+			.replace(/[^a-z0-9\s-]/g, '')
+			.replace(/\s+/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-|-$/g, '');
 	}
 
 	// Public methods

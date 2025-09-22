@@ -1,4 +1,4 @@
-import { App, Menu, Notice, TFile, WorkspaceLeaf } from 'obsidian';
+import { App, Notice, TFile, Menu, Editor, MarkdownView, MenuItem } from 'obsidian';
 import { LivingCanvasPlugin } from '../main';
 import { BlockDefinition } from './BlockManager';
 import { CanvasNode } from './CanvasManager';
@@ -6,6 +6,7 @@ import { CanvasNode } from './CanvasManager';
 export class UIManager {
 	private plugin: LivingCanvasPlugin;
 	private blockConfigView: BlockConfigView | null = null;
+	private selectedNode: CanvasNode | null = null;
 
 	constructor(plugin: LivingCanvasPlugin) {
 		this.plugin = plugin;
@@ -50,43 +51,74 @@ export class UIManager {
 			}
 		});
 
-		// Run Block command (for selected block)
+		// Create Custom Block command
 		this.plugin.addCommand({
-			id: 'run-block',
-			name: 'Run Selected Block',
-			checkCallback: (checking: boolean) => {
-				const selectedNode = this.getSelectedLivingCanvasNode();
-				if (selectedNode) {
-					if (!checking) {
-						this.plugin.actionHandler.handleRunBlock(selectedNode.id);
+			id: 'create-custom-block',
+			name: 'Create Custom AI Block',
+			callback: () => {
+				const modal = new CreateCustomBlockModal(this.plugin.app, async (data) => {
+					if (!data) return;
+					const created = await this.plugin.blockManager.createUserBlock({
+						name: data.name,
+						description: data.description,
+						prompt: data.prompt,
+						temperature: data.temperature
+					});
+					if (created) {
+						new Notice(`Created custom block: ${created.id}`);
+						await this.plugin.blockManager.reloadBlocks();
 					}
-					return true;
-				}
-				return false;
+				});
+				modal.open();
 			}
 		});
 
-		// Configure Block command
+		// Run Block command (always visible; will prompt for a block if none selected)
+		this.plugin.addCommand({
+			id: 'run-block',
+			name: 'Run Selected Block',
+			callback: async () => {
+				const node = await this.resolveTargetLivingNode();
+				if (!node) return;
+				await this.plugin.actionHandler.handleRunBlock(node.id);
+			}
+		});
+
+		// Configure Block command (always visible; will prompt for a block if none selected)
 		this.plugin.addCommand({
 			id: 'configure-block',
 			name: 'Configure Selected Block',
-			checkCallback: (checking: boolean) => {
-				const selectedNode = this.getSelectedLivingCanvasNode();
-				if (selectedNode) {
-					if (!checking) {
-						this.showBlockConfigView(selectedNode);
-					}
-					return true;
-				}
-				return false;
+			callback: async () => {
+				const node = await this.resolveTargetLivingNode();
+				if (!node) return;
+				this.showBlockConfigView(node);
 			}
 		});
 	}
 
 	private registerContextMenus(): void {
-		// For now, we'll use commands instead of context menus
-		// Context menus can be added later when the proper API is available
-		this.plugin.debug('Context menus registered (using commands instead)');
+		// Editor context menu: Ask AI to Clarify
+		this.plugin.registerEvent(
+			this.plugin.app.workspace.on('editor-menu', (menu: Menu, editor: Editor, view: MarkdownView) => {
+				try {
+					const selectedText = editor?.getSelection?.() || '';
+					if (typeof selectedText === 'string' && selectedText.trim().length > 0) {
+						menu.addItem((item: MenuItem) => {
+							item
+								.setTitle('Ask AI to Clarify')
+								.setIcon('help')
+								.onClick(async () => {
+									await this.plugin.actionHandler.handleClarifyText(selectedText);
+								});
+						});
+					}
+				} catch (e) {
+					this.plugin.debug('Error registering editor-menu item', e);
+				}
+			})
+		);
+
+		this.plugin.debug('Context menus registered');
 	}
 
 	private registerCanvasClickHandler(): void {
@@ -112,6 +144,8 @@ export class UIManager {
 		const node = await this.plugin.canvasManager.getNode(nodeId, canvasFile);
 		
 		if (node && node.livingCanvas) {
+			// Track currently selected living canvas node
+			this.selectedNode = node;
 			// Double-click to configure
 			if (evt.detail === 2) {
 				this.showBlockConfigView(node);
@@ -136,19 +170,27 @@ export class UIManager {
 	}
 
 	private async insertBlock(blockId: string): Promise<void> {
+		console.log(`[Living Canvas] Starting insertBlock for blockId: ${blockId}`);
+		
 		const blockDefinition = this.plugin.blockManager.getBlock(blockId);
 		if (!blockDefinition) {
+			console.error(`[Living Canvas] Block definition not found for blockId: ${blockId}`);
 			new Notice(`Block '${blockId}' not found`);
 			return;
 		}
+		console.log(`[Living Canvas] Block definition found:`, blockDefinition);
 
-		const canvasFile = this.plugin.getCurrentCanvasFile();
+		const canvasFile = this.getCurrentCanvasView();
 		if (!canvasFile) {
+			console.error(`[Living Canvas] No canvas file detected`);
 			new Notice('No canvas file is currently open');
 			return;
 		}
+		console.log(`[Living Canvas] Canvas file detected: ${canvasFile.path}`);
 
+		// Ensure the canvas manager knows about the current canvas
 		this.plugin.canvasManager.setCurrentCanvas(canvasFile);
+		console.log(`[Living Canvas] Canvas manager updated with current canvas`);
 
 		// Create the block node
 		const blockNode = {
@@ -164,17 +206,23 @@ export class UIManager {
 				config: this.getDefaultConfig(blockDefinition)
 			}
 		};
+		console.log(`[Living Canvas] Block node created:`, blockNode);
 
+		console.log(`[Living Canvas] Calling createNode...`);
 		const nodeId = await this.plugin.canvasManager.createNode(blockNode, canvasFile);
+		console.log(`[Living Canvas] createNode returned nodeId:`, nodeId);
+		
 		if (nodeId) {
+			console.log(`[Living Canvas] Successfully inserted block with nodeId: ${nodeId}`);
 			new Notice(`Inserted ${blockDefinition.name} block`);
 		} else {
+			console.error(`[Living Canvas] Failed to create node`);
 			new Notice('Failed to insert block');
 		}
 	}
 
-	private getDefaultConfig(blockDefinition: BlockDefinition): any {
-		const config: any = {};
+	private getDefaultConfig(blockDefinition: BlockDefinition): Record<string, unknown> {
+		const config: Record<string, unknown> = {};
 		
 		for (const setting of blockDefinition.settings) {
 			if (setting.default !== undefined) {
@@ -226,19 +274,39 @@ export class UIManager {
 		new Notice('Block reset successfully');
 	}
 
-	private getCurrentCanvasView(): any {
+	private getCurrentCanvasView(): TFile | null {
 		const activeLeaf = this.plugin.app.workspace.activeLeaf;
 		if (activeLeaf && activeLeaf.view.getViewType() === 'canvas') {
-			return activeLeaf.view;
+			return (activeLeaf.view as unknown as { file: TFile }).file;
 		}
 		return null;
 	}
 
 	private getSelectedLivingCanvasNode(): CanvasNode | null {
-		// This is a simplified implementation
-		// In a real implementation, you'd need to track the currently selected node
-		// For now, we'll return null and rely on context menus
-		return null;
+		return this.selectedNode;
+	}
+
+	// Resolve a target living-canvas node: use selection if available, otherwise prompt user to choose
+	private async resolveTargetLivingNode(): Promise<CanvasNode | null> {
+		const selected = this.getSelectedLivingCanvasNode();
+		if (selected && selected.livingCanvas) return selected;
+
+		const canvasFile = this.getCurrentCanvasView();
+		if (!canvasFile) {
+			new Notice('No canvas file is currently open');
+			return null;
+		}
+
+		const nodes = await this.plugin.canvasManager.getLivingCanvasNodes(canvasFile);
+		if (nodes.length === 0) {
+			new Notice('No Living Canvas blocks found on this canvas');
+			return null;
+		}
+
+		return await new Promise<CanvasNode | null>((resolve) => {
+			const modal = new NodePickModal(this.plugin.app, nodes, (node) => resolve(node));
+			modal.open();
+		});
 	}
 }
 
@@ -397,12 +465,219 @@ class BlockSelectionModal {
 	}
 }
 
+// Modal to pick a Living Canvas node when none is selected
+class NodePickModal {
+    private app: App;
+    private nodes: CanvasNode[];
+    private onPick: (node: CanvasNode | null) => void;
+    private modalEl: HTMLElement;
+
+    constructor(app: App, nodes: CanvasNode[], onPick: (node: CanvasNode | null) => void) {
+        this.app = app;
+        this.nodes = nodes;
+        this.onPick = onPick;
+    }
+
+    open(): void {
+        this.modalEl = document.createElement('div');
+        this.modalEl.className = 'modal';
+        this.modalEl.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        `;
+
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: var(--background-primary);
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 420px;
+            max-width: 640px;
+            max-height: 80vh;
+            overflow-y: auto;
+        `;
+
+        const title = document.createElement('h3');
+        title.textContent = 'Choose a Living Canvas block';
+        title.style.marginTop = '0';
+
+        const list = document.createElement('div');
+        list.style.display = 'flex';
+        list.style.flexDirection = 'column';
+        list.style.gap = '8px';
+        for (const n of this.nodes) {
+            const row = document.createElement('button');
+            row.style.textAlign = 'left';
+            row.style.padding = '8px';
+            row.style.border = '1px solid var(--background-modifier-border)';
+            row.style.borderRadius = '6px';
+            row.textContent = `${n.text || ''} (${n.livingCanvas?.blockType || ''})`;
+            row.onclick = () => {
+                this.close();
+                this.onPick(n);
+            };
+            list.appendChild(row);
+        }
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.onclick = () => {
+            this.close();
+            this.onPick(null);
+        };
+
+        content.appendChild(title);
+        content.appendChild(list);
+        content.appendChild(cancelBtn);
+        this.modalEl.appendChild(content);
+        document.body.appendChild(this.modalEl);
+
+        this.modalEl.onclick = (e) => {
+            if (e.target === this.modalEl) {
+                cancelBtn.click();
+            }
+        };
+    }
+
+    private close(): void {
+        if (this.modalEl && this.modalEl.parentNode) {
+            this.modalEl.parentNode.removeChild(this.modalEl);
+        }
+    }
+}
+
+// Modal to create a new custom AI block
+class CreateCustomBlockModal {
+    private app: App;
+    private onDone: (data: { name: string; description: string; prompt: string; temperature?: number } | null) => void;
+    private modalEl: HTMLElement;
+    private nameInput: HTMLInputElement;
+    private descInput: HTMLInputElement;
+    private promptInput: HTMLTextAreaElement;
+    private tempInput: HTMLInputElement;
+
+    constructor(app: App, onDone: (data: { name: string; description: string; prompt: string; temperature?: number } | null) => void) {
+        this.app = app;
+        this.onDone = onDone;
+    }
+
+    open(): void {
+        this.modalEl = document.createElement('div');
+        this.modalEl.className = 'modal';
+        this.modalEl.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        `;
+
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: var(--background-primary);
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 560px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        `;
+
+        const title = document.createElement('h3');
+        title.textContent = 'Create Custom AI Block';
+        title.style.marginTop = '0';
+
+        const form = document.createElement('div');
+        form.style.display = 'flex';
+        form.style.flexDirection = 'column';
+        form.style.gap = '12px';
+
+        this.nameInput = document.createElement('input');
+        this.nameInput.type = 'text';
+        this.nameInput.placeholder = 'Block name (e.g., My Research Helper)';
+
+        this.descInput = document.createElement('input');
+        this.descInput.type = 'text';
+        this.descInput.placeholder = 'Short description';
+
+        this.promptInput = document.createElement('textarea');
+        this.promptInput.rows = 10;
+        this.promptInput.placeholder = 'Write your prompt here. Use {{ input }} to insert connected text.';
+
+        this.tempInput = document.createElement('input');
+        this.tempInput.type = 'number';
+        this.tempInput.step = '0.1';
+        this.tempInput.min = '0';
+        this.tempInput.max = '1';
+        this.tempInput.placeholder = 'Temperature (optional)';
+
+        form.appendChild(this.nameInput);
+        form.appendChild(this.descInput);
+        form.appendChild(this.promptInput);
+        form.appendChild(this.tempInput);
+
+        const buttons = document.createElement('div');
+        buttons.style.display = 'flex';
+        buttons.style.gap = '8px';
+        buttons.style.marginTop = '12px';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.onclick = () => { this.close(); this.onDone(null); };
+
+        const createBtn = document.createElement('button');
+        createBtn.textContent = 'Create Block';
+        createBtn.onclick = () => {
+            const name = (this.nameInput.value || '').trim();
+            const description = (this.descInput.value || '').trim();
+            const prompt = (this.promptInput.value || '').trim();
+            const temperature = this.tempInput.value ? Number(this.tempInput.value) : undefined;
+            if (!name || !prompt) return;
+            this.close();
+            this.onDone({ name, description, prompt, temperature });
+        };
+
+        buttons.appendChild(cancelBtn);
+        buttons.appendChild(createBtn);
+
+        content.appendChild(title);
+        content.appendChild(form);
+        content.appendChild(buttons);
+        this.modalEl.appendChild(content);
+        document.body.appendChild(this.modalEl);
+
+        this.modalEl.onclick = (e) => {
+            if (e.target === this.modalEl) cancelBtn.click();
+        };
+    }
+
+    private close(): void {
+        if (this.modalEl && this.modalEl.parentNode) {
+            this.modalEl.parentNode.removeChild(this.modalEl);
+        }
+    }
+}
+
 // Block Configuration View
 class BlockConfigView {
 	private app: App;
 	private plugin: LivingCanvasPlugin;
 	private node: CanvasNode;
 	private blockDefinition: BlockDefinition;
+	private modalEl: HTMLElement;
 	private viewEl: HTMLElement;
 
 	constructor(app: App, plugin: LivingCanvasPlugin, node: CanvasNode, blockDefinition: BlockDefinition) {
@@ -413,13 +688,33 @@ class BlockConfigView {
 	}
 
 	open(): void {
-		// Create a sidebar view for configuration
+		// Create overlay modal
+		this.modalEl = document.createElement('div');
+		this.modalEl.className = 'modal';
+		this.modalEl.style.cssText = `
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.5);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 1000;
+		`;
+
+		// Modal content
 		this.viewEl = document.createElement('div');
 		this.viewEl.className = 'living-canvas-config-view';
 		this.viewEl.style.cssText = `
 			padding: 20px;
-			height: 100%;
+			min-width: 520px;
+			max-width: 720px;
+			max-height: 80vh;
 			overflow-y: auto;
+			background: var(--background-primary);
+			border-radius: 8px;
 		`;
 
 		const title = document.createElement('h3');
@@ -486,6 +781,11 @@ class BlockConfigView {
 					(input as HTMLInputElement).type = 'text';
 			}
 
+			// Set a stable name attribute for saving
+			if ((input as HTMLElement).setAttribute) {
+				(input as HTMLElement).setAttribute('name', setting.name);
+			}
+
 			input.style.cssText = `
 				width: 100%;
 				padding: 8px;
@@ -520,22 +820,135 @@ class BlockConfigView {
 
 		this.viewEl.appendChild(title);
 		this.viewEl.appendChild(form);
+
+		// If this is the custom prompt block, add saved prompts UI
+		if (this.blockDefinition.id === 'core/custom-prompt') {
+			const savedHeader = document.createElement('h4');
+			savedHeader.textContent = 'Saved prompts';
+			savedHeader.style.margin = '16px 0 8px 0';
+
+			const savedList = document.createElement('div');
+			savedList.style.display = 'flex';
+			savedList.style.flexDirection = 'column';
+			savedList.style.gap = '6px';
+
+			const refreshSaved = () => {
+				savedList.empty?.();
+				const prompts = this.plugin.settings.savedPrompts || [];
+				for (const p of prompts) {
+					const row = document.createElement('div');
+					row.style.display = 'flex';
+					row.style.alignItems = 'center';
+					row.style.gap = '8px';
+
+					const nameEl = document.createElement('span');
+					nameEl.textContent = p.name;
+					nameEl.style.flex = '0 0 auto';
+
+					const applyBtn = document.createElement('button');
+					applyBtn.textContent = 'Use';
+					applyBtn.onclick = () => {
+						const promptInput = form.querySelector('[name="prompt"]') as HTMLTextAreaElement | null;
+						if (promptInput) promptInput.value = p.content;
+					};
+
+					const deleteBtn = document.createElement('button');
+					deleteBtn.textContent = 'Delete';
+					deleteBtn.onclick = async () => {
+						const next = (this.plugin.settings.savedPrompts || []).filter(sp => sp.name !== p.name);
+						this.plugin.settings.savedPrompts = next;
+						await this.plugin.saveSettings();
+						refreshSaved();
+					};
+
+					row.appendChild(nameEl);
+					row.appendChild(applyBtn);
+					row.appendChild(deleteBtn);
+					savedList.appendChild(row);
+				}
+			};
+
+			refreshSaved();
+
+			const saveRow = document.createElement('div');
+			saveRow.style.display = 'flex';
+			saveRow.style.gap = '8px';
+			saveRow.style.marginTop = '8px';
+
+			const nameInput = document.createElement('input');
+			nameInput.type = 'text';
+			nameInput.placeholder = 'Name this prompt';
+			nameInput.style.flex = '1 1 auto';
+
+			const savePromptBtn = document.createElement('button');
+			savePromptBtn.textContent = 'Save current prompt';
+			savePromptBtn.onclick = async () => {
+				const promptInput = form.querySelector('[name="prompt"]') as HTMLTextAreaElement | null;
+				const name = nameInput.value.trim();
+				if (!promptInput || !promptInput.value.trim() || !name) return;
+				const prompts = this.plugin.settings.savedPrompts || [];
+				const filtered = prompts.filter(p => p.name !== name);
+				filtered.push({ name, content: promptInput.value });
+				this.plugin.settings.savedPrompts = filtered;
+				await this.plugin.saveSettings();
+				nameInput.value = '';
+				refreshSaved();
+			};
+
+			saveRow.appendChild(nameInput);
+			saveRow.appendChild(savePromptBtn);
+
+			this.viewEl.appendChild(savedHeader);
+			this.viewEl.appendChild(savedList);
+			this.viewEl.appendChild(saveRow);
+
+			// Add a button to save current config as a reusable community block
+			const saveAsBlockBtn = document.createElement('button');
+			saveAsBlockBtn.textContent = 'Save as new block';
+			saveAsBlockBtn.onclick = async () => {
+				const promptInput = form.querySelector('[name="prompt"]') as HTMLTextAreaElement | null;
+				const tempInput = form.querySelector('[name="temperature"]') as HTMLInputElement | null;
+				const creator = new CreateCustomBlockModal(this.plugin.app, async (data) => {
+					if (!data) return;
+					const finalPrompt = (promptInput?.value?.trim() || data.prompt || '').trim();
+					const finalTemp = tempInput?.value ? Number(tempInput.value) : data.temperature;
+					const created = await this.plugin.blockManager.createUserBlock({
+						name: data.name,
+						description: data.description,
+						prompt: finalPrompt,
+						temperature: finalTemp
+					});
+					if (created) {
+						new Notice(`Created custom block: ${created.id}`);
+						await this.plugin.blockManager.reloadBlocks();
+					}
+				});
+				creator.open();
+			};
+
+			this.viewEl.appendChild(saveAsBlockBtn);
+		}
+
 		this.viewEl.appendChild(buttonContainer);
 
-		// Add to sidebar (simplified implementation)
-		const sidebar = document.querySelector('.workspace-leaf-content[data-type="file-explorer"]')?.parentElement;
-		if (sidebar) {
-			sidebar.appendChild(this.viewEl);
-		}
+		this.modalEl.appendChild(this.viewEl);
+		document.body.appendChild(this.modalEl);
+
+		// Close when clicking outside
+		this.modalEl.onclick = (e) => {
+			if (e.target === this.modalEl) {
+				this.cleanup();
+			}
+		};
 	}
 
 	private async saveConfiguration(form: HTMLFormElement): Promise<void> {
-		const config: any = {};
+		const config: Record<string, unknown> = {};
 		const inputs = form.querySelectorAll('input, textarea, select');
 
 		for (const input of Array.from(inputs)) {
 			const element = input as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
-			const name = element.getAttribute('name') || element.previousElementSibling?.textContent?.toLowerCase().replace(/\s+/g, '_');
+			const name = element.getAttribute('name') || (element.previousElementSibling as HTMLElement)?.innerText?.toLowerCase().replace(/\s+/g, '_');
 			
 			if (name) {
 				if (element.type === 'checkbox') {
@@ -548,10 +961,10 @@ class BlockConfigView {
 
 		// Update the node configuration
 		const canvasFile = this.plugin.getCurrentCanvasFile();
-		if (canvasFile) {
+		if (canvasFile && this.node.livingCanvas) {
 			await this.plugin.canvasManager.updateNodeData(this.node.id, {
 				livingCanvas: {
-					...this.node.livingCanvas!,
+					...this.node.livingCanvas,
 					config: config
 				}
 			}, canvasFile);
@@ -562,8 +975,8 @@ class BlockConfigView {
 	}
 
 	cleanup(): void {
-		if (this.viewEl && this.viewEl.parentNode) {
-			this.viewEl.parentNode.removeChild(this.viewEl);
+		if (this.modalEl && this.modalEl.parentNode) {
+			this.modalEl.parentNode.removeChild(this.modalEl);
 		}
 	}
 }

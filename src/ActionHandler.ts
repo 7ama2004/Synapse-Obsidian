@@ -1,7 +1,6 @@
-import { Notice } from 'obsidian';
+import { Notice, TFile, App, Modal } from 'obsidian';
 import { LivingCanvasPlugin } from '../main';
 import { CanvasNode } from './CanvasManager';
-import { ExecutionResult } from './BlockExecutor';
 
 export class ActionHandler {
 	private plugin: LivingCanvasPlugin;
@@ -29,9 +28,6 @@ export class ActionHandler {
 				new Notice('No canvas file is currently open');
 				return;
 			}
-
-			// Set the canvas file in the canvas manager
-			this.plugin.canvasManager.setCurrentCanvas(canvasFile);
 
 			// Get the node
 			const node = await this.plugin.canvasManager.getNode(nodeId, canvasFile);
@@ -129,8 +125,6 @@ export class ActionHandler {
 					return;
 				}
 
-				this.plugin.canvasManager.setCurrentCanvas(canvasFile);
-
 				// Create answer node
 				const answerNodeId = await this.createAnswerNode(result.output, canvasFile);
 				
@@ -151,7 +145,7 @@ export class ActionHandler {
 	}
 
 	// Create an output node for block results
-	private async createOutputNode(output: string, parentNode: CanvasNode, canvasFile: any): Promise<string | null> {
+	private async createOutputNode(output: string, parentNode: CanvasNode, canvasFile: TFile): Promise<string | null> {
 		const position = this.plugin.canvasManager.calculateNewNodePosition(parentNode);
 		
 		const outputNode = {
@@ -167,7 +161,7 @@ export class ActionHandler {
 	}
 
 	// Create an answer node for clarifications
-	private async createAnswerNode(answer: string, canvasFile: any): Promise<string | null> {
+	private async createAnswerNode(answer: string, canvasFile: TFile): Promise<string | null> {
 		const answerNode = {
 			type: 'text',
 			text: `💡 AI Clarification\n\n${answer}`,
@@ -193,19 +187,19 @@ export class ActionHandler {
 
 // Simple modal for getting user's question
 class QuestionModal {
-	private app: any;
+	private app: App;
 	private onResolve: (question: string | null) => void;
 	private modalEl: HTMLElement;
 	private inputEl: HTMLInputElement;
 
-	constructor(app: any, onResolve: (question: string | null) => void) {
+	constructor(app: App, onResolve: (question: string | null) => void) {
 		this.app = app;
 		this.onResolve = onResolve;
 	}
 
 	open(): void {
 		const { app } = this;
-		const modal = new (app as any).plugins.plugins['obsidian-modal']?.Modal(app) || this.createSimpleModal();
+		const modal = new (app as any).Modal(app) as Modal;
 		
 		if (modal.open) {
 			modal.open();

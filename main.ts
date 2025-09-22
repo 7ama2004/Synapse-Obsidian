@@ -1,4 +1,4 @@
-import { App, Plugin, PluginSettingTab, Setting, TFile, WorkspaceLeaf, Notice } from 'obsidian';
+import { App, Plugin, PluginSettingTab, Setting, TFile, Notice } from 'obsidian';
 import { BlockManager } from './src/BlockManager';
 import { CanvasManager } from './src/CanvasManager';
 import { UIManager } from './src/UIManager';
@@ -10,13 +10,15 @@ export interface LivingCanvasSettings {
 	anthropicApiKey: string;
 	defaultModel: string;
 	enableDebugMode: boolean;
+	savedPrompts?: { name: string; content: string }[];
 }
 
 const DEFAULT_SETTINGS: LivingCanvasSettings = {
 	openaiApiKey: '',
 	anthropicApiKey: '',
 	defaultModel: 'gpt-3.5-turbo',
-	enableDebugMode: false
+	enableDebugMode: false,
+	savedPrompts: []
 };
 
 export class LivingCanvasPlugin extends Plugin {
@@ -48,6 +50,15 @@ export class LivingCanvasPlugin extends Plugin {
 		// Add settings tab
 		this.addSettingTab(new LivingCanvasSettingTab(this.app, this));
 
+		// Track active canvas file
+		this.registerEvent(
+			this.app.workspace.on('active-leaf-change', (leaf) => {
+				if (leaf && leaf.view.getViewType() === 'canvas') {
+					this.canvasManager.setCurrentCanvas((leaf.view as unknown as { file: TFile }).file);
+				}
+			})
+		);
+
 		console.log('Living Canvas plugin loaded successfully');
 	}
 
@@ -68,15 +79,11 @@ export class LivingCanvasPlugin extends Plugin {
 
 	// Utility method to get the current canvas file
 	getCurrentCanvasFile(): TFile | null {
-		const activeLeaf = this.app.workspace.activeLeaf;
-		if (activeLeaf && activeLeaf.view.getViewType() === 'canvas') {
-			return (activeLeaf.view as any).file;
-		}
-		return null;
+		return this.canvasManager.getCurrentCanvas();
 	}
 
 	// Debug logging
-	debug(message: string, ...args: any[]) {
+	debug(message: string, ...args: unknown[]) {
 		if (this.settings.enableDebugMode) {
 			console.log(`[Living Canvas] ${message}`, ...args);
 		}

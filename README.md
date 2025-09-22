@@ -10,6 +10,7 @@ Transform your Obsidian canvas into an intelligent workspace with AI-powered blo
 - **AI Grader**: Grade essays and assignments with detailed feedback
 - **Translator**: Translate text between different languages
 - **Clarification Tool**: Ask AI to clarify any selected text
+-. **Custom Prompt**: Write any prompt and run it against connected text, with reusable saved prompts
 
 ### 🎨 Canvas Integration
 - Seamlessly integrates with Obsidian's native canvas
@@ -58,8 +59,9 @@ Transform your Obsidian canvas into an intelligent workspace with AI-powered blo
 
 ### Configuring Blocks
 
-1. Click on a Living Canvas block
+1. Click a Living Canvas block (double‑click also opens configuration)
 2. Use the command palette to "Configure Selected Block"
+   - The command is always available. If nothing is selected, you’ll be prompted to choose a block from the current canvas.
 3. Adjust the settings in the configuration panel
 4. Save your changes
 
@@ -67,6 +69,7 @@ Transform your Obsidian canvas into an intelligent workspace with AI-powered blo
 
 1. Connect text nodes to your Living Canvas block (draw edges between them)
 2. Use the command palette to "Run Selected Block"
+   - The command is always available. If nothing is selected, you’ll be prompted to choose a block from the current canvas.
 3. The AI will process the connected text and create an output node
 
 ### Text Clarification
@@ -75,6 +78,13 @@ Transform your Obsidian canvas into an intelligent workspace with AI-powered blo
 2. Right-click and choose "Ask AI to Clarify"
 3. Enter your question in the modal
 4. The AI will provide an answer in a new canvas node
+
+### Command list
+
+- "Living Canvas: Insert Block" — insert any available block
+- "Living Canvas: Configure Selected Block" — configure the chosen block (prompts to pick if none is selected)
+- "Living Canvas: Run Selected Block" — execute the chosen block (prompts to pick if none is selected)
+- Right‑click on selected editor text → "Ask AI to Clarify" — answer appears on the canvas
 
 ## Block Types
 
@@ -106,6 +116,16 @@ Transform your Obsidian canvas into an intelligent workspace with AI-powered blo
 - **Settings**:
   - Target language selection
   - Formatting preservation options
+
+### ✨ Custom Prompt
+- **Purpose**: Run any prompt you define against the connected text
+- **How it works**:
+  - In the prompt field, use `{{ input }}` where the connected text should be inserted.
+  - Optionally set a temperature value to hint creativity.
+  - Save prompts for reuse from the configuration panel; saved prompts can be applied or deleted.
+- **Settings**:
+  - Prompt (textarea)
+  - Temperature (number, optional)
 
 ## Architecture
 
@@ -185,6 +205,9 @@ module.exports = { execute };
    - Connect text nodes to your Living Canvas block
    - Make sure the text nodes contain actual text content
 
+5. **"Commands not visible"**
+   - The Run/Configure commands always show in the palette; if nothing is selected you’ll be prompted to choose a block from the current canvas.
+
 ### Debug Mode
 
 Enable debug mode in the plugin settings to see detailed logging in the browser console. This helps troubleshoot issues with block execution and API calls.
@@ -210,6 +233,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Changelog
 
+### Version 1.0.1
+- Added Custom Prompt block with saved prompts
+- Added right‑click "Ask AI to Clarify" on selected text
+- Run/Configure commands always visible and prompt for target if none selected
+
 ### Version 1.0.0
 - Initial release
 - Core block types (Summarizer, Quiz Generator, AI Grader, Translator)
@@ -218,10 +246,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Configuration system
 - Text clarification feature
 
----
-
-<<<<<<< Current (Your changes)
-See https://github.com/obsidianmd/obsidian-api
-=======
 **Happy Canvas Building! 🎨✨**
->>>>>>> Incoming (Background Agent changes)
